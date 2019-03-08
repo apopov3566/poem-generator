@@ -371,8 +371,6 @@ class HiddenMarkovModel:
                 next_emission += 1
             emission.append(next_emission - 1)
 
-        #print(emission)
-
         return emission, states
 
 
