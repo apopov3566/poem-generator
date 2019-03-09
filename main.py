@@ -17,10 +17,10 @@ def run_HMM(n_states, N_iters):
 
 def train_LSTM(X, y, v_size):
 
-    cb = [callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=4, verbose=0, mode='auto')]
+    cb = [callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=2, verbose=0, mode='auto')]
 
     model = Sequential()
-    model.add(layers.LSTM(200, input_shape=(X.shape[1], X.shape[2])))
+    model.add(layers.LSTM(100, input_shape=(X.shape[1], X.shape[2])))
     model.add(layers.Dropout(0.2))
     model.add(layers.Dense(v_size, activation='softmax'))
     model.compile(loss = 'categorical_crossentropy', optimizer='adam',metrics = ['accuracy'])
@@ -31,23 +31,18 @@ def train_LSTM(X, y, v_size):
     model.save('model.tmp')
     return model
 
-def generate_seq(model, mapping, seq_length, seed_text, n_chars):
-	in_text = seed_text
-	for _ in range(n_chars):
-		encoded = [mapping[char] for char in in_text]
-		encoded = preprocessing.sequence.pad_sequences([encoded], maxlen=seq_length, truncating='pre')
-		encoded = utils.to_categorical(encoded, num_classes=len(mapping))
-		yhat = model.predict_classes(encoded, verbose=0)
-		out_char = ''
-		for char, index in mapping.items():
-			if index == yhat:
-				out_char = char
-				break
-		in_text += char
-	return in_text
+def generate_seq(model, char_to_token, token_to_char, seed, n_chars):
+    output = seed
+    for _ in range(n_chars):
+        tokenized = [char_to_token[char] for char in output]
+        tokenized = preprocessing.sequence.pad_sequences([tokenized], maxlen=40, truncating='pre')
+        tokenized = utils.to_categorical(tokenized, num_classes=len(char_to_token))
+        predicted = model.predict_classes(tokenized, verbose=0)
+        output += token_to_char[predicted[0]]
+    return output
 
 if __name__ == '__main__':
-    X, y, v_size, char_to_token, token_to_char = get_LSTM_data("data/shakespeare.txt", True, 1)
-    model = train_LSTM(X, y, v_size)
-    #model = models.load_model('model.tmp')
-    print(generate_seq(model, char_to_token, 40, "shall i compare thee to a summer's day?\n" , 1000))
+    X, y, v_size, char_to_token, token_to_char = get_LSTM_data("data/shakespeare.txt", True, 5)
+    #model = train_LSTM(X, y, v_size)
+    model = models.load_model('m1.model')
+    print(generate_seq(model, char_to_token, token_to_char, "shall i compare thee to a summer's day?\n" , 1000))
