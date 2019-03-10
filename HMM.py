@@ -336,6 +336,25 @@ class HiddenMarkovModel:
                     self.O[this_state][x_val] = O_numerator[this_state][x_val] / O_denominator[this_state]
         #print(self.O)
 
+
+    def generate_reverse_emmision(self, ending, length):
+        ''' ending is the point we start generating in reverse'''
+        from numpy.random import choice
+
+        def get_priors(state, matrix):
+            state_given_is = [i[state] * 1.0 / self.L for i in matrix]
+            norm_const = sum(state_given_is)
+            return [j / norm_const for j in state_given_is]
+
+        states = [choice([i for i in range(self.L)], p=get_priors(ending, self.O))]
+        emission = [ending]
+        # apply transitions
+        for j in range(1,length):
+            states.append(choice([i for i in range(self.L)], p=get_priors(states[-1], self.A)))
+            emission.append(choice([i for i in range(self.D)], p=self.O[states[-1]]))
+
+        return emission[::-1], states[::-1]
+        
     def generate_emission(self, M):
         '''
         Generates an emission of length M, assuming that the starting state
