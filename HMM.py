@@ -265,9 +265,11 @@ class HiddenMarkovModel:
             N_iters:    The number of iterations to train on.
         '''
 
-
+        print("progress: ")
         for iter in range(N_iters):
-            print(iter)
+            
+            if (int(iter * 100 / N_iters) % 10 == 0):
+                print(int(iter * 100 / N_iters), "%", "complete")
             #print(self.A)
 
             #print("---")

@@ -26,9 +26,10 @@ def run_HMM_rhyme(n_states, N_iters):
     rhyme_sets = utils.produce_rhyme_dictionary(corpus, detoken, reverse_dict)
     
     # this array corresponds to scheme abab cdcd efef gg
-    rhyme_endings = utils.get_rhyme_based_on_scheme(rhyme_sets, [1,2,1,2,3,4,3,4,5,6,5,6,7,7])
+    
+    rhyme_endings = utils.get_rhyme_based_on_scheme(rhyme_sets, [1,2,1,2,3,4,3,4,5,6,5,6,7,7],variety = True,variety_lb = 3)
 
-    print("rhyming with: ",rhyme_endings)
+    print("rhyming with: ",[detoken[i] for i in rhyme_endings])
 
     # TODO, implement backwards evolution in HMM
     HMM = unsupervised_HMM(corpus, n_states, N_iters)

@@ -74,6 +74,7 @@ def get_rhyme_based_on_scheme(rhyme_sets, scheme, variety = False, variety_lb = 
     # randomly generate indicies that map rhyme scheme to sets
     
     scheme_to_set = dict()
+    used = set()
 
     for i in scheme:
         set_idx = random.randint(0, len(rhyme_sets))
@@ -82,9 +83,15 @@ def get_rhyme_based_on_scheme(rhyme_sets, scheme, variety = False, variety_lb = 
             while(len(rhyme_sets[set_idx]) < variety_lb):
                 set_idx = random.randint(0, len(rhyme_sets))
 
+        while(set_idx in used):
+            set_idx = random.randint(0, len(rhyme_sets))
+
         scheme_to_set[i] = set_idx
+        used.add(set_idx)
 
     result = []
+
+    dicsize = sum([len(s) for s in rhyme_sets])
 
     for i in scheme:
         cur_rhyme_set = rhyme_sets[scheme_to_set[i]]
@@ -102,6 +109,13 @@ def get_rhyme_based_on_scheme(rhyme_sets, scheme, variety = False, variety_lb = 
             cur_rhyme_set.add(j)
 
         rhyme_sets[scheme_to_set[i]] = cur_rhyme_set
+
+        # must maintain that dictionary is invariant before and after we pop
+        
+        assert(dicsize == sum([len(s) for s in rhyme_sets]))
+
+
+        
 
     return result
 
