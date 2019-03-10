@@ -35,7 +35,7 @@ def tokenize(corpus, tokenize_with_stress = False):
 
 
     token_dict = {v: k for k, v in reverse_dict.items()}
-    return tokenized, token_dict
+    return tokenized, token_dict, reverse_dict
 
 
 def get_corpus(location, split_by_line = False, include_newlines = False):
@@ -51,10 +51,10 @@ def get_corpus(location, split_by_line = False, include_newlines = False):
                 poems[i] = poems[i][poems[i].find("\n")+1:]
             poems[i] = split_sequence(poems[i], include_newlines)
 
-        #print(poems[0])
-        poems, tokens = tokenize(poems)
+        # print(poems[0])
+        poems, tokens, reverse_dict = tokenize(poems)
         f.close()
-        return poems, tokens
+        return poems, tokens, reverse_dict
 
     elif split_by_line:
         lines = f.read().split("\n")
@@ -68,9 +68,9 @@ def get_corpus(location, split_by_line = False, include_newlines = False):
                 lines[i].append("\n")
 
         #print(lines)
-        lines, tokens = tokenize(lines)
+        lines, tokens, reverse_dict = tokenize(lines)
 
-        return lines, tokens
+        return lines, tokens, reverse_dict
 
 def get_LSTM_data(location, include_newlines = False, skipchars = 0):
     f = open(location , 'r')
