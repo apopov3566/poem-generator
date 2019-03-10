@@ -2,6 +2,7 @@ import string, re
 import random
 import numpy as np
 from keras import *
+from utils import *
 
 def split_sequence(sequence, include_newlines, remove_punctuation = True):
     sequence = sequence.lower()
@@ -124,3 +125,74 @@ def get_LSTM_data(location, include_newlines = False, skipchars = 0):
     X = np.array([utils.to_categorical(label, num_classes=v_size) for label in tokenized_seq])
     y = utils.to_categorical(tokenized_labels, num_classes=v_size)
     return X, y, v_size, char_to_token, token_to_char
+
+
+def get_corpus_syllable(stress_file, reverse_dict, detoken):
+    ''' each word has two varieties of syllables. They can either take on 
+    regular R amount of syllables, which is R = [a,b,c...], and then they can
+    take on ending syllables of E = [a,b,c,d....]
+    
+    get_corpus_stress builds a token dicionary from token -> syllable sequence
+    in the format of 
+    {toke:dictionary}
+    where dictionary ={R:[...]; E:[...]}
+
+    '''
+    import difflib
+
+    f = open(stress_file , 'r')
+    lines = f.read().split("\n")
+    token_to_stress = dict()
+
+    for i in lines:
+        sequence = list(i.split(" "))
+        word = sequence[0]
+        worddict = dict()
+
+        ending_char = "E"
+        regular_char = "R"
+        E = []
+        R = []
+        for i in sequence[1:]:
+            if (ending_char in i):
+                E.append(int(i.strip(ending_char)))
+            elif (ending_char not in i):
+                R.append(int(i))
+            else:
+                print("should not reach here")
+                assert(False)
+
+        worddict = {regular_char: R, ending_char:E}
+
+        # an error that we have is not all words in the syllable dictionary 
+        # is in the corpus, thus we will match the corpus to the closest
+        # in the dictionary, then we will assign the syllable count to the
+        # closest matching work in corpus
+        try:
+            word_token = reverse_dict[word]
+        except KeyError as e:
+            close_match = difflib.get_close_matches(word,reverse_dict.keys(), n = 1).pop()
+            word_token = reverse_dict[close_match]
+            print("could not find: ", word, ".using closest match: ", close_match)
+
+        token_to_stress[word_token] = worddict
+
+
+    detoken_keys = set(detoken.keys())
+    token_to_stress_keys = set(token_to_stress.keys())
+    print(detoken_keys - token_to_stress_keys)
+    print(token_to_stress_keys - detoken_keys)
+    assert(detoken_keys == token_to_stress_keys)
+
+
+
+
+
+
+
+
+
+
+
+
+

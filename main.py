@@ -1,4 +1,4 @@
-from data_handler import get_corpus, get_LSTM_data
+from data_handler import get_corpus, get_LSTM_data, get_corpus_syllable
 from HMM import unsupervised_HMM
 import numpy as np
 from keras import *
@@ -41,8 +41,10 @@ def run_HMM_rhyme(n_states, N_iters):
         print(outstr,"\n")
 
 
+def run_HMM_meter(n_states, N_iters):
+    corpus, detoken, reverse_dict = get_corpus("data/shakespeare.txt", False)
 
-
+    get_corpus_syllable("data/Syllable_dictionary.txt", reverse_dict, detoken)
 
 
 def train_LSTM(X, y, v_size):
@@ -74,10 +76,12 @@ def generate_seq(model, char_to_token, token_to_char, seed, n_chars):
 if __name__ == '__main__':
     
     LSTM = (len(sys.argv) >= 2 and '-LSTM' in sys.argv)
-    HMM_simple = (len(sys.argv) >= 2 and '-HMMsimple' in sys.argv)
+    HMM_simple = (len(sys.argv) >= 2 and '-HMM_simple' in sys.argv)
     HMM_rhyme = (len(sys.argv) >= 2 and '-HMM_rhyme' in sys.argv)
+    HMM_meter = (len(sys.argv) >= 2 and '-HMM_meter' in sys.argv)
+    
     if (len(sys.argv) >= 2 and '-h' in sys.argv or '-help' in sys.argv):
-        print("python3 main.py -LSTM -HMMsimple -HMM_rhyme -help")
+        print("python3 main.py -LSTM -HMMsimple -HMM_rhyme -HMM_meter -help")
         sys.exit(0)
 
     if (LSTM):
@@ -94,3 +98,7 @@ if __name__ == '__main__':
     if (HMM_rhyme):
         print("running HMM rhyme")
         run_HMM_rhyme(10,100)
+
+    if (HMM_meter):
+        print("running HMM meter")
+        run_HMM_meter(10,100)
