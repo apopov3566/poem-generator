@@ -7,7 +7,7 @@ from utils import *
 def split_sequence(sequence, include_newlines, remove_punctuation = True):
     sequence = sequence.lower()
     if remove_punctuation:
-        sequence = sequence.translate(str.maketrans('', '','\",.!?;:()'))
+        sequence = sequence.translate(str.maketrans('', '','\'\",.!?;:()'))
 
     if include_newlines:
         sequence = sequence.replace("\n", " \n ").split(" ")
@@ -128,12 +128,12 @@ def get_LSTM_data(location, include_newlines = False, skipchars = 0):
 
 
 def get_corpus_syllable(stress_file, reverse_dict, detoken):
-    ''' each word has two varieties of syllables. They can either take on 
+    ''' each word has two varieties of syllables. They can either take on
     regular R amount of syllables, which is R = [a,b,c...], and then they can
     take on ending syllables of E = [a,b,c,d....]
-    
+
     get_corpus_stress builds a token dicionary from token -> syllable sequence
-    in the format of 
+    in the format of
     {toke:dictionary}
     where dictionary ={R:[...]; E:[...]}
 
@@ -164,7 +164,7 @@ def get_corpus_syllable(stress_file, reverse_dict, detoken):
 
         worddict = {regular_char: R, ending_char:E}
 
-        # an error that we have is not all words in the syllable dictionary 
+        # an error that we have is not all words in the syllable dictionary
         # is in the corpus, thus we will match the corpus to the closest
         # in the dictionary, then we will assign the syllable count to the
         # closest matching work in corpus
@@ -188,20 +188,8 @@ def infer_stress(token_to_syllable):
     ''' returns token to stress pattern
     i.e. stress / unstressed = [1,0]
 
-    in a dictionary 
+    in a dictionary
     result = {token: [1,0,1....]}
 
     '''
     pass
-
-
-
-
-
-
-
-
-
-
-
-
