@@ -171,7 +171,7 @@ def get_corpus_syllable(stress_file, reverse_dict, detoken):
         try:
             word_token = reverse_dict[word]
         except KeyError as e:
-            close_match = difflib.get_close_matches(word,reverse_dict.keys(), n = 1).pop()
+            close_match = difflib.get_close_matches(word, reverse_dict.keys(), n = 1, cutoff = 0).pop()
             word_token = reverse_dict[close_match]
             print("could not find: ", word, ".using closest match: ", close_match)
 
@@ -184,6 +184,15 @@ def get_corpus_syllable(stress_file, reverse_dict, detoken):
     print(token_to_stress_keys - detoken_keys)
     assert(detoken_keys == token_to_stress_keys)
 
+def infer_stress(token_to_syllable):
+    ''' returns token to stress pattern
+    i.e. stress / unstressed = [1,0]
+
+    in a dictionary 
+    result = {token: [1,0,1....]}
+
+    '''
+    pass
 
 
 
