@@ -168,6 +168,51 @@ def recursive_evaluate_stress(stress_dict, stress_scheme, scheme_ptr, token_to_s
 
 
 
+def syllabic_formatter(token_to_syllable, textpool, syllabic_pattern = [5,7,5]):
+    ''' 
+    the way the algorithm works is by using a sliding window of text inside
+    of the text pool and trying to fulfill the segment of 5,7,5 using adjacent words
+
+    '''
+
+    poem_segments = [[] for i in range(len(syllabic_pattern))]
+    
+    start_ptr = 0
+    running_ptr = start_ptr
+    poem_line_ptr = 0
+    running_sum = 0
+    curline = []
+    
+    while(running_ptr < len(textpool)):
+        curline.append(textpool[running_ptr])
+        running_sum += token_to_syllable[textpool[running_ptr]]["R"][0] # just gets first syllabic of regular length
+        
+        if (running_sum == syllabic_pattern[poem_line_ptr]): # great, we reached a correct count
+            # reset all variables
+            poem_segments[poem_line_ptr] = curline
+            running_sum = 0
+            poem_line_ptr += 1
+            curline = []
+            
+            if (poem_line_ptr >= len(syllabic_pattern)): # we've fulfilled all pattenrs
+                return poem_segments
+
+        elif (running_sum > syllabic_pattern[poem_line_ptr]): # we can never reach the correct amount if we go over
+            # reset
+            start_ptr += 1
+            running_ptr = start_ptr
+            running_sum = 0
+            poem_line_ptr = 0
+            curline = []
+
+        running_ptr += 1
+    # in the case we return none, we must regenerate another sequence
+    return None
+
+
+
+
+
 
 
 

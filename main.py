@@ -51,6 +51,25 @@ def run_HMM_meter(n_states, N_iters):
     for i,j in token_to_stress.items():
         print(i,j)
 
+def run_HMM_haiku(n_states, N_iters):
+    corpus, detoken, reverse_dict = get_corpus("data/shakespeare.txt", split_by_line = False)
+
+    token_to_syllable = get_corpus_syllable("data/Syllable_dictionary.txt", reverse_dict, detoken)
+
+    HMM = unsupervised_HMM(corpus, n_states, N_iters)
+
+    output, states = HMM.generate_emission(200)
+    haiku = utils.syllabic_formatter(token_to_syllable, output)
+
+    while(haiku is None):
+        output, states = HMM.generate_emission(200)
+        haiku = utils.syllabic_formatter(token_to_syllable, output)
+
+    for line in haiku:
+        outstr = ""
+        for token in line:
+            outstr += (detoken[token] + " ")
+        print(outstr,"\n")
 
 
 def train_LSTM(X, y, v_size):
@@ -141,9 +160,10 @@ if __name__ == '__main__':
     HMM_simple = (len(sys.argv) >= 2 and '-HMM_simple' in sys.argv)
     HMM_rhyme = (len(sys.argv) >= 2 and '-HMM_rhyme' in sys.argv)
     HMM_meter = (len(sys.argv) >= 2 and '-HMM_meter' in sys.argv)
+    HMM_haiku = (len(sys.argv) >= 2 and '-HMM_haiku' in sys.argv)
 
     if (len(sys.argv) >= 2 and '-h' in sys.argv or '-help' in sys.argv):
-        print("python3 main.py -LSTM -LSTM_adv -HMM_simple -HMM_rhyme -HMM_meter -help")
+        print("python3 main.py -LSTM -LSTM_adv -HMM_simple -HMM_rhyme -HMM_meter -HMM_haiku -help")
         sys.exit(0)
 
     if (LSTM):
@@ -179,3 +199,7 @@ if __name__ == '__main__':
     if (HMM_meter):
         print("running HMM meter")
         run_HMM_meter(10,100)
+
+    if (HMM_haiku):
+        print("running HMM haiku")
+        run_HMM_haiku(10,100)

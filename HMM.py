@@ -395,6 +395,8 @@ class HiddenMarkovModel:
         return emission, states
 
 
+
+
     def probability_alphas(self, x):
         '''
         Finds the maximum probability of a given input sequence using
