@@ -95,17 +95,15 @@ def train_word_embedded_LSTM(X, y, vocab_size, prev_words=22):
     # Setup the model.
     model = Sequential()
     model.add(layers.Embedding(input_dim=vocab_size, output_dim=32, input_length=prev_words))
-    # model.add(layers.LSTM(100, input_shape=(X.shape[1], X.shape[2])))
-    model.add(layers.LSTM(100))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.LSTM(150, dropout=0.3))
     model.add(layers.Dense(vocab_size, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.summary()
 
     # Train and save the model.
     cb = [callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=2, verbose=0, mode='auto')]
-    history = model.fit(X, y, epochs=100, verbose=2, callbacks=cb)
-    model.save('lstm_embedded.tmp')
+    history = model.fit(X, y, epochs=150, verbose=2, callbacks=cb)
+    model.save('lstm_embedded_150_15_30.model')
 
     return model
 
@@ -137,8 +135,7 @@ def generate_word_seq(model, word_to_token, token_to_word, seed, n_lines=13, pre
 
     # Generate n_lines of text.
     while lines < n_lines:
-        tokenized = preprocessing.sequence.pad_sequences([tokenized], maxlen=22, truncating='pre')
-        # one_hot = keras.utils.to_categorical(tokenized, num_classes=len(word_to_token) + 1)
+        tokenized = preprocessing.sequence.pad_sequences([tokenized], maxlen=prev_words, truncating='pre')
         predicted = model.predict_classes(tokenized, verbose=0)
 
         # Add the predicted word.
@@ -175,14 +172,14 @@ if __name__ == '__main__':
 
     if (LSTM_embed):
         print("running word embedded LSTM")
-        prev_words = 22
+        prev_words = 15
         X, y, tokens, reverse_dict = get_word_LSTM_data("data/shakespeare.txt",
                                                         include_newlines=True,
                                                         prev_words=prev_words)
         vocab_size = len(tokens) + 1
 
         # model = train_word_embedded_LSTM(X, y, vocab_size, prev_words=prev_words)
-        model = models.load_model('lstm_embedded.model')
+        model = models.load_model('lstm_embedded_150_15_30.model')
 
         print(generate_word_seq(model, reverse_dict, tokens,
                                 "shall i compare thee to a summers day \n",
