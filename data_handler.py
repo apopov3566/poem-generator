@@ -181,7 +181,7 @@ def get_corpus_syllable(stress_file, reverse_dict, detoken):
 
     f = open(stress_file , 'r')
     lines = f.read().split("\n")
-    token_to_stress = dict()
+    token_to_syllable = dict()
 
     for i in lines:
         sequence = list(i.split(" "))
@@ -214,21 +214,33 @@ def get_corpus_syllable(stress_file, reverse_dict, detoken):
             word_token = reverse_dict[close_match]
             print("could not find: ", word, ".using closest match: ", close_match)
 
-        token_to_stress[word_token] = worddict
+        token_to_syllable[word_token] = worddict
 
 
     detoken_keys = set(detoken.keys())
-    token_to_stress_keys = set(token_to_stress.keys())
-    print(detoken_keys - token_to_stress_keys)
-    print(token_to_stress_keys - detoken_keys)
-    assert(detoken_keys == token_to_stress_keys)
+    token_to_syllable_keys = set(token_to_syllable.keys())
+    assert(detoken_keys == token_to_syllable_keys)
+    return token_to_syllable
 
-def infer_stress(token_to_syllable):
+def infer_stress(token_to_syllable, corpus, stress_scheme = [0,1,0,1,0,1,0,1,0,1]):
     ''' returns token to stress pattern
     i.e. stress / unstressed = [1,0]
 
     in a dictionary
-    result = {token: [1,0,1....]}
+    result = {token: [[1,0],[0,1]]}
+    note that the token hashes to a list of lists, where each sublist is a potential stress pattern
+    i.e. stress of [0,1] = [unstressed, stressed]
 
+    iambic pentameter goes unstressed / stressed .....
+    i.e.
+    0101010101
     '''
-    pass
+
+    stress_dict = dict()
+    for line in corpus:
+        recursive_evaluate_stress(stress_dict, stress_scheme, 0, token_to_syllable, line, 0)
+    return stress_dict
+
+        
+
+            

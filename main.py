@@ -1,4 +1,4 @@
-from data_handler import get_corpus, get_LSTM_data, get_word_LSTM_data, get_corpus_syllable
+from data_handler import get_corpus, get_LSTM_data, get_word_LSTM_data, get_corpus_syllable, infer_stress
 from HMM import unsupervised_HMM
 import numpy as np
 import keras
@@ -43,9 +43,14 @@ def run_HMM_rhyme(n_states, N_iters):
 
 
 def run_HMM_meter(n_states, N_iters):
-    corpus, detoken, reverse_dict = get_corpus("data/shakespeare.txt", False)
+    corpus, detoken, reverse_dict = get_corpus("data/shakespeare.txt", split_by_line = True)
 
-    get_corpus_syllable("data/Syllable_dictionary.txt", reverse_dict, detoken)
+    token_to_syllable = get_corpus_syllable("data/Syllable_dictionary.txt", reverse_dict, detoken)
+    token_to_stress = infer_stress(token_to_syllable, corpus)
+
+    for i,j in token_to_stress.items():
+        print(i,j)
+
 
 
 def train_LSTM(X, y, v_size):

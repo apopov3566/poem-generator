@@ -133,7 +133,39 @@ def syllable_count(word):
     return count
 
 
-        
+def recursive_evaluate_stress(stress_dict, stress_scheme, scheme_ptr, token_to_syllable, wordlst, wordlst_ptr):
+
+    # for all possible syllables, advance pointer by that much and reach the
+    # corresponding scheme into a string, then we add that string to the stress
+    # dictionary
+    
+    def get_stress(scheme, scheme_ptr, syllable_len):
+        # returns a list of stresses
+        if scheme_ptr >= len(scheme):
+            print("out of bounds ptr: ", scheme_ptr)
+        return stress_scheme[scheme_ptr: scheme_ptr +  syllable_len]
+    
+    if (wordlst_ptr < len(wordlst)): # not done, so do
+        word = wordlst[wordlst_ptr]
+        possible_syllables = token_to_syllable[word]
+
+        # at this point we determine whether this is the end of the list
+        syllables = possible_syllables["R"]
+        if (len(wordlst) - 1 == wordlst_ptr): # this is case where the word is at the end, then we use ending syllable count if available
+            if ("E" in possible_syllables.keys()):
+                syllables = possible_syllables["E"]
+
+        for i in syllables:
+            if word in stress_dict.keys():
+                stress_pattern = get_stress(stress_scheme, scheme_ptr, i)
+                if stress_pattern not in stress_dict[word]:
+                    stress_dict[word].append(stress_pattern)
+            else:
+                stress_dict[word] = [get_stress(stress_scheme, scheme_ptr, i)]
+            
+            #recursive call by advancing the pointers
+            recursive_evaluate_stress(stress_dict, stress_scheme, scheme_ptr + i, token_to_syllable, wordlst, wordlst_ptr + 1)
+
 
 
 
