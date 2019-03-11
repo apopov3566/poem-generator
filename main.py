@@ -75,13 +75,14 @@ def run_HMM_haiku(n_states, N_iters):
         print(outstr,"\n")
 
 
-def train_LSTM(X, y, v_size):
+def train_LSTM(X, y, v_size, temp):
 
     cb = [callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=2, verbose=0, mode='auto')]
 
     model = Sequential()
     model.add(layers.LSTM(100, input_shape=(X.shape[1], X.shape[2])))
     model.add(layers.Dropout(0.2))
+    model.add(layers.Lambda(lambda x: x/temp))
     model.add(layers.Dense(v_size, activation='softmax'))
     model.compile(loss = 'categorical_crossentropy', optimizer='adam',metrics = ['accuracy'])
     print(model.summary())
@@ -170,7 +171,16 @@ if __name__ == '__main__':
         print("running LSTM")
         X, y, v_size, char_to_token, token_to_char = get_LSTM_data("data/shakespeare.txt", True, 5)
         #model = train_LSTM(X, y, v_size)
-        model = models.load_model('m1.model')
+        model1 = train_LSTM(X, y, v_size, 0.25)
+        model1.save('lstm_t25.model')
+
+        model2 = train_LSTM(X, y, v_size, 0.75)
+        model2.save('lstm_t75.model')
+
+        model3 = train_LSTM(X, y, v_size, 1.50)
+        model3.save('lstm_t150.model')
+
+        #model = models.load_model('m1.model')
         print(generate_seq(model, char_to_token, token_to_char, "shall i compare thee to a summer's day?\n"))
 
     if (LSTM_embed):
