@@ -1,6 +1,7 @@
-from data_handler import get_corpus, get_LSTM_data, get_corpus_syllable
+from data_handler import get_corpus, get_LSTM_data, get_word_LSTM_data, get_corpus_syllable
 from HMM import unsupervised_HMM
 import numpy as np
+import keras
 from keras import *
 import sys
 import utils
@@ -20,13 +21,13 @@ def run_HMM(n_states, N_iters):
 def run_HMM_rhyme(n_states, N_iters):
     # rhyme scheme:
     # abab cdcd efef gg
-    
+
 
     corpus, detoken, reverse_dict = get_corpus("data/shakespeare.txt", False)
     rhyme_sets = utils.produce_rhyme_dictionary(corpus, detoken, reverse_dict)
-    
+
     # this array corresponds to scheme abab cdcd efef gg
-    
+
     rhyme_endings = utils.get_rhyme_based_on_scheme(rhyme_sets, [1,2,1,2,3,4,3,4,5,6,5,6,7,7],variety = True,variety_lb = 3)
 
     print("rhyming with: ",[detoken[i] for i in rhyme_endings])
@@ -63,25 +64,81 @@ def train_LSTM(X, y, v_size):
     model.save('model.tmp')
     return model
 
-def generate_seq(model, char_to_token, token_to_char, seed, n_chars):
+
+def train_word_embedded_LSTM(X, y, vocab_size, prev_words=22):
+    ''' Trains a LSTM using word embeddings. '''
+
+    # Setup the model.
+    model = Sequential()
+    model.add(layers.Embedding(input_dim=vocab_size, output_dim=32, input_length=prev_words))
+    # model.add(layers.LSTM(100, input_shape=(X.shape[1], X.shape[2])))
+    model.add(layers.LSTM(100))
+    model.add(layers.Dropout(0.2))
+    model.add(layers.Dense(vocab_size, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.summary()
+
+    # Train and save the model.
+    cb = [callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=2, verbose=0, mode='auto')]
+    history = model.fit(X, y, epochs=100, verbose=2, callbacks=cb)
+    model.save('lstm_embedded.tmp')
+
+    return model
+
+
+def generate_seq(model, char_to_token, token_to_char, seed, n_lines=14):
     output = seed
-    for _ in range(n_chars):
+    lines = 0
+
+    while lines < n_lines:
         tokenized = [char_to_token[char] for char in output]
         tokenized = preprocessing.sequence.pad_sequences([tokenized], maxlen=40, truncating='pre')
-        tokenized = utils.to_categorical(tokenized, num_classes=len(char_to_token))
+        tokenized = keras.utils.to_categorical(tokenized, num_classes=len(char_to_token))
         predicted = model.predict_classes(tokenized, verbose=0)
         output += token_to_char[predicted[0]]
+
+        # Check for a line end.
+        if output[-1] == '\n':
+            lines += 1
+
     return output
 
+
+def generate_word_seq(model, word_to_token, token_to_word, seed, n_lines=13, prev_words=22):
+    output = seed
+    lines = 0
+
+    # Convert the seed to a list of tokens.
+    tokenized = [word_to_token[word] for word in seed.split(' ')]
+
+    # Generate n_lines of text.
+    while lines < n_lines:
+        tokenized = preprocessing.sequence.pad_sequences([tokenized], maxlen=22, truncating='pre')
+        # one_hot = keras.utils.to_categorical(tokenized, num_classes=len(word_to_token) + 1)
+        predicted = model.predict_classes(tokenized, verbose=0)
+
+        # Add the predicted word.
+        tokenized = np.append(tokenized, [predicted]);
+        output += token_to_word[predicted[0]]
+
+        # Check for a line end.
+        if output[-1] == '\n':
+            lines += 1
+        else:
+            output += ' '
+
+    return output[:-1]
+
 if __name__ == '__main__':
-    
+
     LSTM = (len(sys.argv) >= 2 and '-LSTM' in sys.argv)
+    LSTM_embed = (len(sys.argv) >= 2 and '-LSTM_embed' in sys.argv)
     HMM_simple = (len(sys.argv) >= 2 and '-HMM_simple' in sys.argv)
     HMM_rhyme = (len(sys.argv) >= 2 and '-HMM_rhyme' in sys.argv)
     HMM_meter = (len(sys.argv) >= 2 and '-HMM_meter' in sys.argv)
-    
+
     if (len(sys.argv) >= 2 and '-h' in sys.argv or '-help' in sys.argv):
-        print("python3 main.py -LSTM -HMMsimple -HMM_rhyme -HMM_meter -help")
+        print("python3 main.py -LSTM -LSTM_adv -HMM_simple -HMM_rhyme -HMM_meter -help")
         sys.exit(0)
 
     if (LSTM):
@@ -89,7 +146,22 @@ if __name__ == '__main__':
         X, y, v_size, char_to_token, token_to_char = get_LSTM_data("data/shakespeare.txt", True, 5)
         #model = train_LSTM(X, y, v_size)
         model = models.load_model('m1.model')
-        print(generate_seq(model, char_to_token, token_to_char, "shall i compare thee to a summer's day?\n" , 1000))
+        print(generate_seq(model, char_to_token, token_to_char, "shall i compare thee to a summer's day?\n"))
+
+    if (LSTM_embed):
+        print("running word embedded LSTM")
+        prev_words = 22
+        X, y, tokens, reverse_dict = get_word_LSTM_data("data/shakespeare.txt",
+                                                        include_newlines=True,
+                                                        prev_words=prev_words)
+        vocab_size = len(tokens) + 1
+
+        # model = train_word_embedded_LSTM(X, y, vocab_size, prev_words=prev_words)
+        model = models.load_model('lstm_embedded.model')
+
+        print(generate_word_seq(model, reverse_dict, tokens,
+                                "shall i compare thee to a summers day \n",
+                                prev_words=prev_words))
 
     if (HMM_simple):
         print("running HMM simple")

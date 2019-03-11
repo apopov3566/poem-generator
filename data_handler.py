@@ -1,6 +1,7 @@
 import string, re
 import random
 import numpy as np
+import keras
 from keras import *
 from utils import *
 
@@ -125,6 +126,44 @@ def get_LSTM_data(location, include_newlines = False, skipchars = 0):
     X = np.array([utils.to_categorical(label, num_classes=v_size) for label in tokenized_seq])
     y = utils.to_categorical(tokenized_labels, num_classes=v_size)
     return X, y, v_size, char_to_token, token_to_char
+
+
+def get_word_LSTM_data(location, include_newlines=True, prev_words=22):
+    '''
+    Get the data to train the word embedded LSTM.
+
+    location (string): the path to the data file.
+    include_newlines (bool): whether to treat a newline as a word.
+    prev_words (int): the number of previous words in the poem available to
+                      predict the next word.
+
+    returns: (X, y, tokens, reverse_dict)
+        X (2d array): a matrix with each row giving the integer encoding of the
+                      past 'prev_words' words.
+        y (1d array): the true next word for the corresponding row in X.
+        tokens (dict): the dictionary mapping an integer to a word.
+        reverse_dict (dict): the dictionary mapping a word to its int.
+    '''
+
+    # Get the data as a sequence of words.
+    corpus, tokens, reverse_dict = get_corpus("data/shakespeare.txt", include_newlines=True)
+
+    X = []
+    y = []
+
+    for poem in corpus:
+        # We need at least one word to predict the next word.
+        for (i, word) in enumerate(poem[1:]):
+            # Get the past 'prev_words' words.
+            x = poem[max(0, i - prev_words) : i + 1]
+
+            X.append(x)
+            y.append(keras.utils.to_categorical(poem[i + 1], len(tokens) + 1))
+
+    # Pad the sequence if it is fewer than 'prev_words' words.
+    X = keras.preprocessing.sequence.pad_sequences(X, maxlen=prev_words)
+
+    return np.array(X), np.array(y), tokens, reverse_dict
 
 
 def get_corpus_syllable(stress_file, reverse_dict, detoken):
