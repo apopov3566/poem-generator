@@ -5,6 +5,7 @@ import keras
 from keras import *
 import sys
 import utils
+from joblib import dump, load
 
 def run_HMM(n_states, N_iters):
     corpus, detoken, _ = get_corpus("data/shakespeare.txt", False)
@@ -56,7 +57,9 @@ def run_HMM_haiku(n_states, N_iters):
 
     token_to_syllable = get_corpus_syllable("data/Syllable_dictionary.txt", reverse_dict, detoken)
 
-    HMM = unsupervised_HMM(corpus, n_states, N_iters)
+    HMM = load('hmm_haiku.model')
+    # HMM = unsupervised_HMM(corpus, n_states, N_iters)
+    # dump(HMM, 'hmm_haiku.model')
 
     output, states = HMM.generate_emission(200)
     haiku = utils.syllabic_formatter(token_to_syllable, output)
