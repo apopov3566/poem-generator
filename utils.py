@@ -1,6 +1,7 @@
 import pip
 import numpy as np
 import random
+import pickle
 
 def install(package):
     if hasattr(pip, 'main'):

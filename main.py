@@ -54,7 +54,19 @@ def run_HMM_meter(n_states, N_iters):
     rhyme_sets = utils.produce_rhyme_dictionary(corpus, detoken, reverse_dict)
     rhyme_endings = utils.get_rhyme_based_on_scheme(rhyme_sets, [1,2,1,2,3,4,3,4,5,6,5,6,7,7],variety = True,variety_lb = 3)
     
-    HMM = unsupervised_HMM(corpus, n_states, N_iters)
+    from pathlib import Path
+    fname = "HMM_" + str(n_states) + "_" + str(N_iters)
+
+    mymodel = Path(fname)
+    if mymodel.is_file():
+        print("loaded model: ", fname)
+        HMM = utils.load_model(fname)
+    else:
+        HMM = unsupervised_HMM(corpus, n_states, N_iters)
+        print("saved model: ", mymodel)
+        utils.save_model(HMM, fname)
+
+
 
     for i in rhyme_endings:
         output = HMM.generate_reverse_emmision_syllable_stress(i,10,token_to_syllable, token_to_stress)
