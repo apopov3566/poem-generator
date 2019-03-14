@@ -146,7 +146,7 @@ def recursive_evaluate_stress(stress_dict, stress_scheme, scheme_ptr, token_to_s
         return stress_scheme[scheme_ptr: scheme_ptr +  syllable_len]
     
     if (wordlst_ptr < len(wordlst)): # not done, so do
-        word = wordlst[wordlst_ptr]
+        word = wordlst[wordlst_ptr] # word is the token of the word
         possible_syllables = token_to_syllable[word]
 
         # at this point we determine whether this is the end of the list
@@ -208,6 +208,17 @@ def syllabic_formatter(token_to_syllable, textpool, syllabic_pattern = [5,7,5]):
         running_ptr += 1
     # in the case we return none, we must regenerate another sequence
     return None
+
+
+def save_model(model, fname):
+    """saves given model to file"""
+    pickle.dump( model, open( fname, "wb" ) )
+
+def load_model(fname):
+    f = open(fname, 'rb')
+    model = pickle.load(f)
+    f.close()
+    return model
 
 
 

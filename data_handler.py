@@ -4,6 +4,7 @@ import numpy as np
 import keras
 from keras import *
 from utils import *
+debug = False
 
 def split_sequence(sequence, include_newlines, remove_punctuation = True):
     sequence = sequence.lower()
@@ -212,7 +213,8 @@ def get_corpus_syllable(stress_file, reverse_dict, detoken):
         except KeyError as e:
             close_match = difflib.get_close_matches(word, reverse_dict.keys(), n = 1, cutoff = 0).pop()
             word_token = reverse_dict[close_match]
-            print("could not find: ", word, ".using closest match: ", close_match)
+            if debug:
+                print("could not find: ", word, ".using closest match: ", close_match)
 
         token_to_syllable[word_token] = worddict
 
@@ -236,9 +238,16 @@ def infer_stress(token_to_syllable, corpus, stress_scheme = [0,1,0,1,0,1,0,1,0,1
     0101010101
     '''
 
+    # we extend it in the generic case if certain words go over the limit
+    stress_scheme = [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1]
+
     stress_dict = dict()
     for line in corpus:
         recursive_evaluate_stress(stress_dict, stress_scheme, 0, token_to_syllable, line, 0)
+
+    print("stress dictionary: ",len(stress_dict.keys()), "syllable dicionary: ", len(token_to_syllable.keys()))
+    # assert(len(stress_dict.keys()) == len(token_to_syllable.keys()))
+
     return stress_dict
 
         

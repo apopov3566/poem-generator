@@ -356,6 +356,43 @@ class HiddenMarkovModel:
             emission.append(choice([i for i in range(self.D)], p=self.O[states[-1]]))
 
         return emission[::-1], states[::-1]
+
+    def generate_reverse_emmision_syllable_stress(self, ending, syllable_length, token_to_syllable, token_to_stress):
+        '''
+        general idea of algorithm:
+        we want to take any arbitrary ending, call generate reverse emission
+        on windows of 2 words, meaning we generate 1 new word per call,
+        then keep a running tab of syllable counts. If we match that syllable
+        count, then we return, otherwise restart and discard current line
+        
+        here length is the number of syllables
+
+        '''
+        sequence = [ending]
+        syllable_count = token_to_syllable[ending]["R"][0]
+        # curstress = token_to_stress[ending][0][0] # take the first stressed syllable of the ending
+        while(syllable_count != syllable_length):
+            
+            emission, state = self.generate_reverse_emmision(sequence[-1], 2)
+            newterm = emission[0]
+            #while(newterm not in token_to_stress.keys() or token_to_stress[newterm][0][-1] == curstress):
+                # regenerate until stress is not equal
+            #    emission, state = self.generate_reverse_emmision(sequence[-1], 2)
+            #    newterm = emission[0]
+
+            # curstress = token_to_stress[newterm][0][0]
+
+            syllable_count += token_to_syllable[newterm]["R"][0]
+            sequence.append(newterm)
+            if (syllable_count == syllable_length):
+                # we satisfy condition
+                return sequence[::-1]
+            elif(syllable_count > syllable_length):
+                # its impossible to go back, then restart
+                sequence = [ending]
+                syllable_count = token_to_syllable[ending]["R"][0]
+            #    curstress = token_to_stress[ending][0][0]
+
         
     def generate_emission(self, M):
         '''
