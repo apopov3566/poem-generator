@@ -34,13 +34,16 @@ def run_HMM_rhyme(n_states, N_iters):
     print("rhyming with: ",[detoken[i] for i in rhyme_endings])
 
     # TODO, implement backwards evolution in HMM
-    HMM = unsupervised_HMM(corpus, n_states, N_iters)
+    HMM = load('hmm_rhyme.model')
+    # HMM = unsupervised_HMM(corpus, n_states, N_iters)
+    # dump(HMM, 'hmm_rhyme.model')
+
     for i in rhyme_endings:
-        output, states = HMM.generate_reverse_emmision(i, 20)
+        output, states = HMM.generate_reverse_emmision(i, 7)
         outstr = ""
         for token in output:
             outstr += (detoken[token] + " ")
-        print(outstr,"\n")
+        print(outstr)
 
 
 def run_HMM_meter(n_states, N_iters):
