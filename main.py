@@ -7,6 +7,12 @@ import sys
 import utils
 from joblib import dump, load
 
+
+def perplexity(y_true, y_pred):
+    cross_entropy = keras.backend.categorical_crossentropy(y_true, y_pred)
+    return keras.backend.pow(2.0, cross_entropy)
+
+
 def run_HMM(n_states, N_iters):
     corpus, detoken, _ = get_corpus("data/shakespeare.txt", False)
     HMM = unsupervised_HMM(corpus, n_states, N_iters)
@@ -53,7 +59,7 @@ def run_HMM_meter(n_states, N_iters):
     token_to_stress = infer_stress(token_to_syllable, corpus)
     rhyme_sets = utils.produce_rhyme_dictionary(corpus, detoken, reverse_dict)
     rhyme_endings = utils.get_rhyme_based_on_scheme(rhyme_sets, [1,2,1,2,3,4,3,4,5,6,5,6,7,7],variety = True,variety_lb = 3)
-    
+
     from pathlib import Path
     fname = "HMM_" + str(n_states) + "_" + str(N_iters)
 
@@ -80,7 +86,7 @@ def run_HMM_meter(n_states, N_iters):
         print(outstr)
         print(outstress)
         print(syllablesstr)
-    
+
 def run_HMM_haiku(n_states, N_iters):
     corpus, detoken, reverse_dict = get_corpus("data/shakespeare.txt", split_by_line = False)
 
@@ -130,7 +136,7 @@ def train_word_embedded_LSTM(X, y, vocab_size, prev_words=22):
     model.add(layers.Embedding(input_dim=vocab_size, output_dim=32, input_length=prev_words))
     model.add(layers.LSTM(150, dropout=0.3))
     model.add(layers.Dense(vocab_size, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy', perplexity])
     model.summary()
 
     # Train and save the model.
@@ -222,7 +228,9 @@ if __name__ == '__main__':
         vocab_size = len(tokens) + 1
 
         # model = train_word_embedded_LSTM(X, y, vocab_size, prev_words=prev_words)
-        model = models.load_model('lstm_embedded_150_15_30.model')
+        model = models.load_model('lstm_embedded_150_15_30.model', custom_objects={'perplexity': perplexity})
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy', perplexity])
+        print(model.evaluate(X, y))
 
         print(generate_word_seq(model, reverse_dict, tokens,
                                 "shall i compare thee to a summers day \n",
@@ -243,6 +251,3 @@ if __name__ == '__main__':
     if (HMM_haiku):
         print("running HMM haiku")
         run_HMM_haiku(10,100)
-
-
-
